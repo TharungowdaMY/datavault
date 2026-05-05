@@ -11,3 +11,4 @@ pandas
 python-dotenv
 apscheduler
 pydantic-settings
+pydantic[email]
