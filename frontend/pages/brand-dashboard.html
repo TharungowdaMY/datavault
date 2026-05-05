@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Brand Dashboard — DataVault</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#07070d;--surface:#0f0f18;--border:rgba(255,255,255,0.07);--accent:#00e5a0;--accent2:#7c6dfa;--amber:#f5a623;--text:#f0efe8;--muted:rgba(240,239,232,0.45);--card:#13131e;--error:#ff6b6b}
+    body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh}
+    body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 80%, rgba(124,109,250,0.05) 0%, transparent 50%);pointer-events:none}
+    .layout{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+    .sidebar{background:var(--surface);border-right:0.5px solid var(--border);padding:1.5rem;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+    .logo{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:800;text-decoration:none;color:var(--text);margin-bottom:2.5rem}
+    .logo-box{width:28px;height:28px;background:var(--accent2);border-radius:6px;display:grid;place-items:center}
+    .nav-section{font-size:10px;font-family:'DM Mono',monospace;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:0.75rem;margin-top:1.5rem}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:all 0.2s;text-decoration:none;border:none;background:transparent;width:100%;text-align:left}
+    .nav-item:hover{background:rgba(255,255,255,0.04);color:var(--text)}
+    .nav-item.active{background:rgba(124,109,250,0.1);color:var(--accent2)}
+    .sidebar-bottom{margin-top:auto}
+    .brand-chip{background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px}
+    .avatar{width:32px;height:32px;background:var(--accent2);border-radius:8px;display:grid;place-items:center;font-size:13px;font-weight:700;color:white;flex-shrink:0}
+    .main{padding:2rem 2.5rem;overflow-x:hidden}
+    .page{display:none}
+    .page.active{display:block;animation:fadeUp 0.3s ease both}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .page-header{margin-bottom:2rem}
+    .page-header h1{font-size:24px;font-weight:800;letter-spacing:-0.5px;margin-bottom:4px}
+    .page-header p{font-size:13px;color:var(--muted);font-family:'DM Mono',monospace}
+    .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:2rem}
+    .stat-card{background:var(--card);border:0.5px solid var(--border);border-radius:12px;padding:1.25rem}
+    .stat-label{font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);margin-bottom:8px;letter-spacing:0.5px}
+    .stat-value{font-size:28px;font-weight:800;letter-spacing:-1px}
+    .stat-sub{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:4px}
+
+    /* QUERY BUILDER */
+    .query-card{background:var(--card);border:0.5px solid var(--border);border-radius:16px;padding:1.75rem;margin-bottom:1.5rem}
+    .query-card h2{font-size:17px;font-weight:700;margin-bottom:1.5rem}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .field{margin-bottom:0}
+    .field-label{display:block;font-size:12px;font-weight:600;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:6px;letter-spacing:0.5px}
+    select,input[type=number],input[type=text]{width:100%;background:var(--surface);border:0.5px solid var(--border);border-radius:8px;padding:11px 14px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none;transition:border-color 0.2s}
+    select:focus,input:focus{border-color:var(--accent2)}
+    select option{background:var(--surface)}
+    .btn-query{background:var(--accent2);color:white;border:none;padding:12px 28px;border-radius:8px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:1.5rem;transition:opacity 0.2s,transform 0.1s}
+    .btn-query:hover{opacity:0.87;transform:translateY(-1px)}
+    .btn-query:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+    .query-result{background:rgba(124,109,250,0.08);border:0.5px solid rgba(124,109,250,0.2);border-radius:10px;padding:14px;margin-top:1rem;font-family:'DM Mono',monospace;font-size:13px;color:var(--accent2);display:none}
+    .error-box{background:rgba(255,107,107,0.08);border:0.5px solid rgba(255,107,107,0.2);border-radius:10px;padding:14px;margin-top:1rem;font-family:'DM Mono',monospace;font-size:13px;color:var(--error);display:none}
+
+    /* INSIGHTS */
+    .insights-card{background:var(--card);border:0.5px solid var(--border);border-radius:16px;padding:1.75rem;margin-bottom:1.5rem}
+    .insights-card h2{font-size:17px;font-weight:700;margin-bottom:1.5rem}
+    .insight-block{margin-bottom:1.5rem}
+    .insight-title{font-size:13px;font-family:'DM Mono',monospace;color:var(--muted);margin-bottom:1rem;letter-spacing:0.5px}
+    .bar-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+    .bar-label{font-size:12px;font-family:'DM Mono',monospace;color:var(--muted);width:140px;flex-shrink:0}
+    .bar-track{flex:1;background:rgba(255,255,255,0.06);border-radius:4px;height:8px;overflow:hidden}
+    .bar-fill{height:100%;border-radius:4px;background:var(--accent2);transition:width 1s ease}
+    .bar-pct{font-size:12px;font-family:'DM Mono',monospace;font-weight:700;color:var(--accent2);width:44px;text-align:right}
+    .kill-switch-banner{background:rgba(124,109,250,0.08);border:0.5px solid rgba(124,109,250,0.25);border-radius:10px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem}
+    .kill-info{font-size:13px;font-family:'DM Mono',monospace;color:var(--accent2)}
+    .kill-timer{font-size:20px;font-weight:800;color:var(--accent2);font-family:'DM Mono',monospace}
+    .empty-state{text-align:center;padding:3rem;color:var(--muted);font-family:'DM Mono',monospace;font-size:14px}
+    .empty-icon{font-size:40px;margin-bottom:1rem}
+
+    /* TOAST */
+    .toast{position:fixed;bottom:2rem;right:2rem;background:var(--card);border:0.5px solid var(--accent2);border-radius:10px;padding:12px 18px;font-size:14px;font-family:'DM Mono',monospace;color:var(--accent2);z-index:999;transform:translateY(100px);opacity:0;transition:all 0.3s}
+    .toast.show{transform:translateY(0);opacity:1}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <a href="../index.html" class="logo">
+      <div class="logo-box">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <rect x="2" y="2" width="12" height="12" rx="2" stroke="white" stroke-width="1.5"/>
+          <path d="M5 8h6M8 5v6" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      DataVault
+    </a>
+    <div class="nav-section">Brand</div>
+    <button class="nav-item active" onclick="showPage('overview', this)"><span>📊</span> Overview</button>
+    <button class="nav-item" onclick="showPage('query', this)"><span>🔍</span> New Query</button>
+    <button class="nav-item" onclick="showPage('insights', this)"><span>💡</span> Insights</button>
+    <div class="sidebar-bottom">
+      <div class="brand-chip">
+        <div class="avatar" id="brand-avatar">B</div>
+        <div>
+          <div style="font-size:13px;font-weight:700" id="sidebar-brand-name">Brand</div>
+          <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">Data Buyer</div>
+        </div>
+      </div>
+      <button class="nav-item" style="margin-top:8px;color:var(--error)" onclick="logout()"><span>↩</span> Logout</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- OVERVIEW -->
+    <div class="page active" id="page-overview">
+      <div class="page-header">
+        <h1>Brand Dashboard</h1>
+        <p>Access consented, anonymised user insights.</p>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">AVAILABLE CREDITS</div>
+          <div class="stat-value" style="color:var(--accent2)" id="stat-credits">₹0</div>
+          <div class="stat-sub">Mock credits for demo</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">TOTAL SPENT</div>
+          <div class="stat-value" style="color:var(--amber)" id="stat-spent">₹0</div>
+          <div class="stat-sub">Across all queries</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">USER RESPONSES</div>
+          <div class="stat-value" style="color:var(--accent)" id="stat-responses">0</div>
+          <div class="stat-sub">Consented data points</div>
+        </div>
+      </div>
+      <div style="background:var(--card);border:0.5px solid var(--border);border-radius:14px;padding:1.5rem">
+        <div style="font-size:15px;font-weight:700;margin-bottom:1rem">Quick Actions</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn-query" onclick="showPage('query', document.querySelectorAll('.nav-item')[1])">+ New Query</button>
+          <button onclick="showPage('insights', document.querySelectorAll('.nav-item')[2])" style="background:transparent;color:var(--accent2);border:0.5px solid rgba(124,109,250,0.3);padding:12px 24px;border-radius:8px;font-family:'Syne',sans-serif;font-size:14px;font-weight:600;cursor:pointer">View Insights →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUERY BUILDER -->
+    <div class="page" id="page-query">
+      <div class="page-header">
+        <h1>Build a Query</h1>
+        <p>Define what you want to know. Set your offer. Users decide.</p>
+      </div>
+      <div class="query-card">
+        <h2>Query Parameters</h2>
+        <div class="form-grid">
+          <div class="field">
+            <label class="field-label">SIGNAL TYPE</label>
+            <select id="q-signal">
+              <option value="price_preference">💰 Price Preference</option>
+              <option value="running_frequency">🏃 Running Frequency</option>
+              <option value="food_preference">🍔 Food Preference</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">OFFER PER USER (₹)</label>
+            <input type="number" id="q-offer" value="18" min="5" max="500"/>
+          </div>
+          <div class="field">
+            <label class="field-label">TARGET CITY</label>
+            <select id="q-city">
+              <option value="">All Cities</option>
+              <option value="Bengaluru">Bengaluru</option>
+              <option value="Mumbai">Mumbai</option>
+              <option value="Delhi">Delhi</option>
+              <option value="Chennai">Chennai</option>
+              <option value="Hyderabad">Hyderabad</option>
+              <option value="Pune">Pune</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">AGE RANGE</label>
+            <div style="display:flex;gap:8px">
+              <input type="number" id="q-age-min" placeholder="Min" value="18" style="flex:1"/>
+              <input type="number" id="q-age-max" placeholder="Max" value="35" style="flex:1"/>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:14px;margin-top:1.5rem">
+          <div style="font-size:12px;font-family:'DM Mono',monospace;color:var(--muted);margin-bottom:8px">WHAT BRANDS GET</div>
+          <div style="font-size:13px;font-family:'DM Mono',monospace;color:var(--text)">✓ Aggregated, anonymised signals only<br/>✓ No names, no addresses, no raw data<br/>✓ Access expires in 24 hours (Kill Switch)<br/>✓ Users explicitly consent before you see anything</div>
+        </div>
+
+        <button class="btn-query" id="send-query-btn" onclick="sendQuery()">Send Query to Matching Users →</button>
+        <div class="query-result" id="query-result"></div>
+        <div class="error-box" id="query-error"></div>
+      </div>
+    </div>
+
+    <!-- INSIGHTS -->
+    <div class="page" id="page-insights">
+      <div class="page-header">
+        <h1>Insights</h1>
+        <p>Anonymised, aggregated signals from consenting users.</p>
+      </div>
+
+      <div class="kill-switch-banner" id="kill-banner" style="display:none">
+        <div>
+          <div class="kill-info">⏱ Kill Switch Active</div>
+          <div style="font-size:12px;font-family:'DM Mono',monospace;color:var(--muted);margin-top:2px">Access expires automatically</div>
+        </div>
+        <div class="kill-timer" id="kill-timer">24:00:00</div>
+      </div>
+
+      <div id="insights-container">
+        <div class="empty-state"><div class="empty-icon">📊</div>Loading insights...</div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const API = 'http://localhost:8000';
+  let token = localStorage.getItem('token');
+  let brandName = localStorage.getItem('user_name') || 'Brand';
+
+  if (!token || localStorage.getItem('account_type') !== 'brand') {
+    window.location.href = 'login.html';
+  }
+
+  document.getElementById('sidebar-brand-name').textContent = brandName;
+  document.getElementById('brand-avatar').textContent = brandName.charAt(0).toUpperCase();
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  function showPage(name, el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    if (el) el.classList.add('active');
+    if (name === 'insights') loadInsights();
+    if (name === 'overview') loadOverview();
+  }
+
+  function authHeaders() {
+    return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+  }
+
+  async function loadOverview() {
+    try {
+      const res = await fetch(`${API}/brand/dashboard`, { headers: authHeaders() });
+      if (res.status === 401) { logout(); return; }
+      const data = await res.json();
+      document.getElementById('stat-credits').textContent = `₹${data.credits.toFixed(0)}`;
+      document.getElementById('stat-spent').textContent = `₹${data.total_spent.toFixed(2)}`;
+      document.getElementById('stat-responses').textContent = data.total_queries;
+    } catch(e) { console.error(e); }
+  }
+
+  async function sendQuery() {
+    const btn = document.getElementById('send-query-btn');
+    const resultEl = document.getElementById('query-result');
+    const errorEl = document.getElementById('query-error');
+    resultEl.style.display = 'none';
+    errorEl.style.display = 'none';
+
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+
+    const body = {
+      signal_type: document.getElementById('q-signal').value,
+      offer_amount: parseFloat(document.getElementById('q-offer').value),
+      target_city: document.getElementById('q-city').value || null,
+      target_age_min: parseInt(document.getElementById('q-age-min').value) || null,
+      target_age_max: parseInt(document.getElementById('q-age-max').value) || null
+    };
+
+    try {
+      const res = await fetch(`${API}/brand/query`, {
+        method: 'POST', headers: authHeaders(), body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        resultEl.innerHTML = `✓ Query sent to ${data.users_matched} matching users<br/>Requests created: ${data.requests_created}<br/>Credits spent: ₹${data.credits_spent}<br/>Credits remaining: ₹${data.credits_remaining}`;
+        resultEl.style.display = 'block';
+        showToast(`Query sent to ${data.users_matched} users!`);
+        loadOverview();
+      } else {
+        errorEl.textContent = data.detail || 'Query failed.';
+        errorEl.style.display = 'block';
+      }
+    } catch {
+      errorEl.textContent = 'Cannot connect to server.';
+      errorEl.style.display = 'block';
+    }
+    btn.disabled = false;
+    btn.textContent = 'Send Query to Matching Users →';
+  }
+
+  async function loadInsights() {
+    const container = document.getElementById('insights-container');
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">⏳</div>Loading...</div>';
+    try {
+      const res = await fetch(`${API}/brand/insights`, { headers: authHeaders() });
+      const data = await res.json();
+
+      if (!data.total_responses || data.total_responses === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><div>No responses yet.</div><div style="margin-top:8px;font-size:12px">Send a query and wait for users to accept.</div></div>';
+        return;
+      }
+
+      document.getElementById('kill-banner').style.display = 'flex';
+      startKillTimer();
+
+      let html = `
+        <div class="insights-card">
+          <h2>Aggregated Results — ${data.total_responses} user${data.total_responses > 1 ? 's' : ''} responded</h2>
+          <div style="font-size:12px;font-family:'DM Mono',monospace;color:var(--muted);margin-bottom:1.5rem">Raw data never shared. These are anonymised, computed signals only.</div>
+      `;
+
+      for (const [signalType, values] of Object.entries(data.insights)) {
+        html += `<div class="insight-block">`;
+        html += `<div class="insight-title">${signalType.replace(/_/g,' ').toUpperCase()}</div>`;
+
+        for (const [key, val] of Object.entries(values)) {
+          const isPercent = key !== 'avg_spend' && key !== 'avg_runs' && key !== 'avg_order_value' && key !== 'orders_per_month';
+          const displayVal = isPercent ? `${val}%` : (key.includes('spend') || key.includes('order_value') ? `₹${val}` : val);
+          const barWidth = isPercent ? val : Math.min((val / 10) * 100, 100);
+
+          html += `
+            <div class="bar-row">
+              <div class="bar-label">${key.replace(/_/g,' ')}</div>
+              <div class="bar-track"><div class="bar-fill" style="width:${barWidth}%"></div></div>
+              <div class="bar-pct">${displayVal}</div>
+            </div>
+          `;
+        }
+        html += `</div>`;
+      }
+      html += `</div>`;
+      container.innerHTML = html;
+
+    } catch {
+      container.innerHTML = '<div class="empty-state">Failed to load insights.</div>';
+    }
+  }
+
+  function startKillTimer() {
+    const timerEl = document.getElementById('kill-timer');
+    let seconds = 86400; // 24 hours
+    const interval = setInterval(() => {
+      seconds--;
+      if (seconds <= 0) {
+        clearInterval(interval);
+        timerEl.textContent = 'EXPIRED';
+        document.getElementById('insights-container').innerHTML = '<div class="empty-state"><div class="empty-icon">🔪</div><div style="color:var(--error)">Kill Switch fired. Access revoked.</div><div style="margin-top:8px;font-size:12px">Purchase a new query to refresh insights.</div></div>';
+        return;
+      }
+      const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
+      const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+      const s = String(seconds % 60).padStart(2, '0');
+      timerEl.textContent = `${h}:${m}:${s}`;
+    }, 1000);
+  }
+
+  function logout() {
+    localStorage.clear();
+    window.location.href = 'login.html';
+  }
+
+  loadOverview();
+</script>
+</body>
+</html>

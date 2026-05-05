@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Vault — DataVault</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#07070d;--surface:#0f0f18;--border:rgba(255,255,255,0.07);--accent:#00e5a0;--accent2:#7c6dfa;--amber:#f5a623;--text:#f0efe8;--muted:rgba(240,239,232,0.45);--card:#13131e;--error:#ff6b6b}
+    body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh}
+    body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 80% 20%, rgba(0,229,160,0.04) 0%, transparent 50%);pointer-events:none}
+
+    /* SIDEBAR */
+    .layout{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+    .sidebar{background:var(--surface);border-right:0.5px solid var(--border);padding:1.5rem;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+    .logo{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:800;text-decoration:none;color:var(--text);margin-bottom:2.5rem}
+    .logo-box{width:28px;height:28px;background:var(--accent);border-radius:6px;display:grid;place-items:center;flex-shrink:0}
+    .nav-section{font-size:10px;font-family:'DM Mono',monospace;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:0.75rem;margin-top:1.5rem}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:all 0.2s;text-decoration:none;border:none;background:transparent;width:100%;text-align:left}
+    .nav-item:hover{background:rgba(255,255,255,0.04);color:var(--text)}
+    .nav-item.active{background:rgba(0,229,160,0.1);color:var(--accent)}
+    .nav-item .icon{width:18px;text-align:center}
+    .sidebar-bottom{margin-top:auto}
+    .user-chip{background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px}
+    .avatar{width:32px;height:32px;background:var(--accent2);border-radius:8px;display:grid;place-items:center;font-size:13px;font-weight:700;color:white;flex-shrink:0}
+    .user-name{font-size:13px;font-weight:700}
+    .user-role{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+
+    /* MAIN */
+    .main{padding:2rem 2.5rem;overflow-x:hidden}
+    .page{display:none}
+    .page.active{display:block;animation:fadeUp 0.3s ease both}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+    .page-header{margin-bottom:2rem}
+    .page-header h1{font-size:24px;font-weight:800;letter-spacing:-0.5px;margin-bottom:4px}
+    .page-header p{font-size:13px;color:var(--muted);font-family:'DM Mono',monospace}
+
+    /* STATS ROW */
+    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:2rem}
+    .stat-card{background:var(--card);border:0.5px solid var(--border);border-radius:12px;padding:1.25rem}
+    .stat-card .label{font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);margin-bottom:8px;letter-spacing:0.5px}
+    .stat-card .value{font-size:26px;font-weight:800;letter-spacing:-1px}
+    .stat-card .value.green{color:var(--accent)}
+    .stat-card .value.purple{color:var(--accent2)}
+    .stat-card .value.amber{color:var(--amber)}
+    .stat-card .sub{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:4px}
+
+    /* NOTIFICATIONS */
+    .notif-list{display:flex;flex-direction:column;gap:12px}
+    .notif-card{background:var(--card);border:0.5px solid var(--border);border-radius:14px;padding:1.25rem;display:grid;grid-template-columns:1fr auto;gap:1rem;align-items:center;transition:border-color 0.2s}
+    .notif-card:hover{border-color:rgba(255,255,255,0.12)}
+    .notif-card .brand-name{font-size:15px;font-weight:700;margin-bottom:4px}
+    .notif-card .signal{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:8px}
+    .notif-card .chips{display:flex;gap:6px;flex-wrap:wrap}
+    .chip{font-size:11px;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:4px}
+    .chip-green{background:rgba(0,229,160,0.1);color:var(--accent)}
+    .chip-purple{background:rgba(124,109,250,0.12);color:var(--accent2)}
+    .chip-amber{background:rgba(245,166,35,0.12);color:var(--amber)}
+    .notif-actions{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+    .offer{font-size:22px;font-weight:800;color:var(--accent);letter-spacing:-0.5px}
+    .offer-sub{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;text-align:right}
+    .btn-row{display:flex;gap:6px}
+    .btn-accept{background:var(--accent);color:#07070d;border:none;padding:8px 16px;border-radius:7px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s}
+    .btn-accept:hover{opacity:0.85}
+    .btn-reject{background:transparent;color:var(--muted);border:0.5px solid var(--border);padding:8px 14px;border-radius:7px;font-family:'Syne',sans-serif;font-size:13px;cursor:pointer}
+    .empty-state{text-align:center;padding:3rem;color:var(--muted);font-family:'DM Mono',monospace;font-size:14px}
+    .empty-icon{font-size:40px;margin-bottom:1rem}
+
+    /* DATA SOURCES */
+    .sources-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:1.5rem}
+    .source-card{background:var(--card);border:0.5px solid var(--border);border-radius:12px;padding:1.25rem;position:relative}
+    .source-icon{font-size:28px;margin-bottom:10px}
+    .source-type{font-size:14px;font-weight:700;margin-bottom:4px}
+    .source-date{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+    .source-badge{position:absolute;top:12px;right:12px;background:rgba(0,229,160,0.1);border:0.5px solid rgba(0,229,160,0.3);color:var(--accent);font-size:10px;padding:3px 7px;border-radius:4px;font-family:'DM Mono',monospace}
+    .upload-box{background:transparent;border:0.5px dashed rgba(255,255,255,0.15);border-radius:12px;padding:2rem;text-align:center;cursor:pointer;transition:border-color 0.2s,background 0.2s}
+    .upload-box:hover{border-color:var(--accent);background:rgba(0,229,160,0.03)}
+    .upload-box p{font-size:13px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:8px}
+    .upload-form{background:var(--card);border:0.5px solid var(--border);border-radius:14px;padding:1.5rem;margin-top:1rem;display:none}
+    .field{margin-bottom:1.25rem}
+    label.field-label{display:block;font-size:12px;font-weight:600;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:6px;letter-spacing:0.5px}
+    select,input[type=file]{width:100%;background:var(--surface);border:0.5px solid var(--border);border-radius:8px;padding:11px 14px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none;transition:border-color 0.2s}
+    select:focus{border-color:var(--accent)}
+    select option{background:var(--surface)}
+    .btn-upload{background:var(--accent);color:#07070d;border:none;padding:10px 20px;border-radius:8px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s}
+    .btn-upload:hover{opacity:0.85}
+    .btn-upload:disabled{opacity:0.5;cursor:not-allowed}
+
+    /* TRANSACTIONS */
+    .tx-table{width:100%;border-collapse:collapse}
+    .tx-table th{text-align:left;font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);padding:10px 14px;border-bottom:0.5px solid var(--border);letter-spacing:0.5px}
+    .tx-table td{padding:12px 14px;font-size:13px;border-bottom:0.5px solid var(--border);font-family:'DM Mono',monospace}
+    .tx-table tr:last-child td{border-bottom:none}
+    .tx-table tr:hover td{background:rgba(255,255,255,0.02)}
+    .tx-earn{color:var(--accent);font-weight:700}
+
+    /* TOAST */
+    .toast{position:fixed;bottom:2rem;right:2rem;background:var(--card);border:0.5px solid var(--accent);border-radius:10px;padding:12px 18px;font-size:14px;font-family:'DM Mono',monospace;color:var(--accent);z-index:999;transform:translateY(100px);opacity:0;transition:all 0.3s}
+    .toast.show{transform:translateY(0);opacity:1}
+  </style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <a href="../index.html" class="logo">
+      <div class="logo-box">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <rect x="2" y="2" width="12" height="12" rx="2" stroke="#07070d" stroke-width="1.5"/>
+          <path d="M5 8h6M8 5v6" stroke="#07070d" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      DataVault
+    </a>
+
+    <div class="nav-section">Main</div>
+    <button class="nav-item active" onclick="showPage('dashboard', this)"><span class="icon">⬡</span> Dashboard</button>
+    <button class="nav-item" onclick="showPage('notifications', this)"><span class="icon">🔔</span> Notifications <span id="notif-badge" style="margin-left:auto;background:var(--accent);color:#07070d;font-size:10px;padding:1px 6px;border-radius:10px;display:none">0</span></button>
+    <button class="nav-item" onclick="showPage('vault', this)"><span class="icon">🔐</span> My Vault</button>
+    <button class="nav-item" onclick="showPage('earnings', this)"><span class="icon">💰</span> Earnings</button>
+
+    <div class="sidebar-bottom">
+      <div class="user-chip">
+        <div class="avatar" id="avatar-initial">A</div>
+        <div>
+          <div class="user-name" id="sidebar-name">Loading...</div>
+          <div class="user-role">Data Owner</div>
+        </div>
+      </div>
+      <button class="nav-item" style="margin-top:8px;color:var(--error)" onclick="logout()"><span class="icon">↩</span> Logout</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- DASHBOARD PAGE -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <h1>My Vault</h1>
+        <p>Your data. Your control. Your earnings.</p>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="label">WALLET BALANCE</div>
+          <div class="value green" id="stat-wallet">₹0</div>
+          <div class="sub">Available to withdraw</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">DATA SOURCES</div>
+          <div class="value purple" id="stat-sources">0</div>
+          <div class="sub">Encrypted & secured</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">PENDING REQUESTS</div>
+          <div class="value amber" id="stat-pending">0</div>
+          <div class="sub">Awaiting your decision</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">VAULT STATUS</div>
+          <div class="value green" style="font-size:18px">🔐 SECURE</div>
+          <div class="sub">AES-256 encrypted</div>
+        </div>
+      </div>
+
+      <!-- Quick notifications preview -->
+      <div style="background:var(--card);border:0.5px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1.5rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+          <div style="font-size:15px;font-weight:700">Pending Requests</div>
+          <button onclick="showPage('notifications', document.querySelector('.nav-item:nth-child(5)'));loadNotifications()" style="background:transparent;border:none;color:var(--accent);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer">View all →</button>
+        </div>
+        <div id="dash-notifs">
+          <div class="empty-state"><div class="empty-icon">📭</div>No pending requests</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTIFICATIONS PAGE -->
+    <div class="page" id="page-notifications">
+      <div class="page-header">
+        <h1>Data Requests</h1>
+        <p>Brands want your insights. You decide what to share.</p>
+      </div>
+      <div class="notif-list" id="notif-list">
+        <div class="empty-state"><div class="empty-icon">📭</div>Loading requests...</div>
+      </div>
+    </div>
+
+    <!-- VAULT PAGE -->
+    <div class="page" id="page-vault">
+      <div class="page-header">
+        <h1>My Data Vault</h1>
+        <p>Upload and manage your encrypted data sources.</p>
+      </div>
+      <div class="sources-grid" id="sources-grid">
+        <div class="empty-state" style="grid-column:1/-1">Loading vault...</div>
+      </div>
+
+      <!-- Upload trigger -->
+      <div class="upload-box" onclick="toggleUpload()">
+        <div style="font-size:28px">+</div>
+        <p>Click to upload a new data source</p>
+      </div>
+
+      <!-- Upload form -->
+      <div class="upload-form" id="upload-form">
+        <div style="font-size:15px;font-weight:700;margin-bottom:1.25rem">Upload Data Source</div>
+        <div class="field">
+          <label class="field-label">DATA TYPE</label>
+          <select id="data-type">
+            <option value="shopping">🛍️ Shopping History</option>
+            <option value="fitness">🏃 Fitness Data</option>
+            <option value="food">🍔 Food Orders</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label">CSV FILE</label>
+          <input type="file" id="csv-file" accept=".csv"/>
+        </div>
+        <button class="btn-upload" id="upload-btn" onclick="uploadData()">🔐 Encrypt & Upload</button>
+        <div id="upload-status" style="margin-top:10px;font-size:13px;font-family:'DM Mono',monospace;color:var(--muted)"></div>
+      </div>
+    </div>
+
+    <!-- EARNINGS PAGE -->
+    <div class="page" id="page-earnings">
+      <div class="page-header">
+        <h1>Earnings</h1>
+        <p>Every rupee you earned from your data.</p>
+      </div>
+      <div style="background:var(--card);border:0.5px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1.5rem;display:flex;gap:2rem;flex-wrap:wrap">
+        <div>
+          <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);margin-bottom:6px">TOTAL EARNED</div>
+          <div style="font-size:32px;font-weight:800;color:var(--accent);letter-spacing:-1px" id="total-earned">₹0</div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);margin-bottom:6px">TRANSACTIONS</div>
+          <div style="font-size:32px;font-weight:800;letter-spacing:-1px" id="total-txns">0</div>
+        </div>
+      </div>
+      <div style="background:var(--card);border:0.5px solid var(--border);border-radius:14px;overflow:hidden">
+        <table class="tx-table">
+          <thead>
+            <tr>
+              <th>DATE</th>
+              <th>EARNED</th>
+              <th>PLATFORM CUT</th>
+              <th>TX ID</th>
+            </tr>
+          </thead>
+          <tbody id="tx-body">
+            <tr><td colspan="4" style="text-align:center;color:var(--muted)">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const API = 'http://localhost:8000';
+  let token = localStorage.getItem('token');
+  let userName = localStorage.getItem('user_name') || 'User';
+
+  if (!token) window.location.href = 'login.html';
+
+  // Set user info
+  document.getElementById('sidebar-name').textContent = userName;
+  document.getElementById('avatar-initial').textContent = userName.charAt(0).toUpperCase();
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  function showPage(name, el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    if (el) el.classList.add('active');
+
+    if (name === 'notifications') loadNotifications();
+    if (name === 'vault') loadVault();
+    if (name === 'earnings') loadEarnings();
+    if (name === 'dashboard') loadDashboard();
+  }
+
+  function authHeaders() {
+    return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+  }
+
+  async function loadDashboard() {
+    try {
+      const res = await fetch(`${API}/user/dashboard`, { headers: authHeaders() });
+      if (res.status === 401) { logout(); return; }
+      const data = await res.json();
+      document.getElementById('stat-wallet').textContent = `₹${data.wallet_balance.toFixed(2)}`;
+      document.getElementById('stat-sources').textContent = data.data_sources.length;
+      document.getElementById('stat-pending').textContent = data.pending_requests;
+
+      if (data.pending_requests > 0) {
+        const badge = document.getElementById('notif-badge');
+        badge.textContent = data.pending_requests;
+        badge.style.display = 'inline';
+      }
+
+      // Load quick notifs
+      const nr = await fetch(`${API}/user/notifications`, { headers: authHeaders() });
+      const notifs = await nr.json();
+      const container = document.getElementById('dash-notifs');
+      if (!notifs.length) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div>No pending requests</div>';
+      } else {
+        container.innerHTML = notifs.slice(0,2).map(n => `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--border)">
+            <div>
+              <div style="font-size:14px;font-weight:700">Request #${n.request_id}</div>
+              <div style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace">${n.signal_type} · ₹${n.offer_amount}</div>
+            </div>
+            <button class="btn-accept" onclick="acceptRequest(${n.request_id})">Accept ₹${n.offer_amount}</button>
+          </div>
+        `).join('');
+      }
+    } catch(e) { console.error(e); }
+  }
+
+  async function loadNotifications() {
+    const list = document.getElementById('notif-list');
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">⏳</div>Loading...</div>';
+    try {
+      const res = await fetch(`${API}/user/notifications`, { headers: authHeaders() });
+      const data = await res.json();
+      if (!data.length) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><div>No pending requests right now.</div><div style="margin-top:8px;font-size:12px">Upload your data so brands can find you.</div></div>';
+        return;
+      }
+      list.innerHTML = data.map(n => `
+        <div class="notif-card">
+          <div>
+            <div class="brand-name">Data Request #${n.request_id}</div>
+            <div class="signal">Signal requested: ${n.signal_type.replace(/_/g,' ')}</div>
+            <div class="chips">
+              <span class="chip chip-green">🔐 Raw data protected</span>
+              <span class="chip chip-purple">⏱ 24hr access only</span>
+              <span class="chip chip-amber">📊 Anonymised output</span>
+            </div>
+          </div>
+          <div class="notif-actions">
+            <div class="offer">₹${n.offer_amount}</div>
+            <div class="offer-sub">You get ₹${(n.offer_amount * 0.9).toFixed(2)}<br/>Platform: ₹${(n.offer_amount * 0.1).toFixed(2)}</div>
+            <div class="btn-row">
+              <button class="btn-accept" onclick="acceptRequest(${n.request_id})">✓ Accept</button>
+              <button class="btn-reject" onclick="rejectRequest(${n.request_id})">✕</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    } catch(e) {
+      list.innerHTML = '<div class="empty-state">Failed to load. Is the backend running?</div>';
+    }
+  }
+
+  async function acceptRequest(id) {
+    try {
+      const res = await fetch(`${API}/user/accept/${id}`, {
+        method: 'POST', headers: authHeaders()
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(`💰 +₹${data.earned} added to your wallet!`);
+        loadNotifications();
+        loadDashboard();
+      } else {
+        showToast(`Error: ${data.detail}`);
+      }
+    } catch { showToast('Failed to accept request.'); }
+  }
+
+  async function rejectRequest(id) {
+    try {
+      const res = await fetch(`${API}/user/reject/${id}`, {
+        method: 'POST', headers: authHeaders()
+      });
+      if (res.ok) {
+        showToast('Request rejected.');
+        loadNotifications();
+        loadDashboard();
+      }
+    } catch { showToast('Failed to reject.'); }
+  }
+
+  async function loadVault() {
+    const grid = document.getElementById('sources-grid');
+    try {
+      const res = await fetch(`${API}/user/dashboard`, { headers: authHeaders() });
+      const data = await res.json();
+      const icons = { shopping: '🛍️', fitness: '🏃', food: '🍔' };
+      if (!data.data_sources.length) {
+        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🔓</div>No data sources yet. Upload your first CSV.</div>';
+        return;
+      }
+      grid.innerHTML = data.data_sources.map(s => `
+        <div class="source-card">
+          <div class="source-badge">ENCRYPTED</div>
+          <div class="source-icon">${icons[s.type] || '📁'}</div>
+          <div class="source-type">${s.type.charAt(0).toUpperCase() + s.type.slice(1)} Data</div>
+          <div class="source-date">Uploaded ${new Date(s.uploaded).toLocaleDateString()}</div>
+        </div>
+      `).join('');
+    } catch { grid.innerHTML = '<div class="empty-state">Failed to load vault.</div>'; }
+  }
+
+  function toggleUpload() {
+    const form = document.getElementById('upload-form');
+    form.style.display = form.style.display === 'block' ? 'none' : 'block';
+  }
+
+  async function uploadData() {
+    const btn = document.getElementById('upload-btn');
+    const status = document.getElementById('upload-status');
+    const fileInput = document.getElementById('csv-file');
+    const dataType = document.getElementById('data-type').value;
+
+    if (!fileInput.files.length) {
+      status.textContent = 'Please select a CSV file.';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Encrypting...';
+    status.textContent = '';
+
+    const formData = new FormData();
+    formData.append('data_type', dataType);
+    formData.append('file', fileInput.files[0]);
+
+    try {
+      const res = await fetch(`${API}/user/upload`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+      const data = await res.json();
+      if (res.ok) {
+        status.style.color = 'var(--accent)';
+        status.textContent = '✓ ' + data.message;
+        showToast('🔐 Data encrypted and stored!');
+        fileInput.value = '';
+        loadVault();
+        setTimeout(() => { document.getElementById('upload-form').style.display = 'none'; }, 1500);
+      } else {
+        status.style.color = 'var(--error)';
+        status.textContent = data.detail || 'Upload failed.';
+      }
+    } catch {
+      status.style.color = 'var(--error)';
+      status.textContent = 'Cannot connect to server.';
+    }
+    btn.disabled = false;
+    btn.textContent = '🔐 Encrypt & Upload';
+  }
+
+  async function loadEarnings() {
+    try {
+      const res = await fetch(`${API}/user/transactions`, { headers: authHeaders() });
+      const data = await res.json();
+      const total = data.reduce((s, t) => s + t.earned, 0);
+      document.getElementById('total-earned').textContent = `₹${total.toFixed(2)}`;
+      document.getElementById('total-txns').textContent = data.length;
+      const tbody = document.getElementById('tx-body');
+      if (!data.length) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:2rem">No transactions yet. Accept a request to earn.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.map(t => `
+        <tr>
+          <td>${new Date(t.date).toLocaleDateString()}</td>
+          <td class="tx-earn">+₹${t.earned.toFixed(2)}</td>
+          <td style="color:var(--muted)">₹${t.platform_cut.toFixed(2)}</td>
+          <td style="color:var(--muted)">#${t.id}</td>
+        </tr>
+      `).join('');
+    } catch { console.error('Failed to load earnings'); }
+  }
+
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('account_type');
+    localStorage.removeItem('user_name');
+    window.location.href = 'login.html';
+  }
+
+  // Initial load
+  loadDashboard();
+</script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Register — DataVault</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#07070d;--surface:#0f0f18;--border:rgba(255,255,255,0.07);--accent:#00e5a0;--accent2:#7c6dfa;--text:#f0efe8;--muted:rgba(240,239,232,0.45);--card:#13131e;--error:#ff6b6b}
+    body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;display:grid;place-items:center;padding:2rem}
+    body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 30% 50%, rgba(0,229,160,0.06) 0%, transparent 60%);pointer-events:none}
+    .card{background:var(--card);border:0.5px solid var(--border);border-radius:20px;padding:2.5rem;width:100%;max-width:440px;animation:fadeUp 0.5s ease both}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+    .logo{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:800;margin-bottom:2rem;text-decoration:none;color:var(--text)}
+    .logo-box{width:28px;height:28px;background:var(--accent);border-radius:6px;display:grid;place-items:center}
+    h1{font-size:24px;font-weight:800;letter-spacing:-0.5px;margin-bottom:0.4rem}
+    .subtitle{font-size:13px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:2rem}
+    .tabs{display:flex;background:var(--surface);border-radius:10px;padding:4px;margin-bottom:2rem}
+    .tab{flex:1;padding:9px;text-align:center;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;border:none;background:transparent;color:var(--muted);font-family:'Syne',sans-serif}
+    .tab.active{background:var(--card);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,0.3)}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .field{margin-bottom:1.25rem}
+    label{display:block;font-size:12px;font-weight:600;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:6px;letter-spacing:0.5px}
+    input,select{width:100%;background:var(--surface);border:0.5px solid var(--border);border-radius:8px;padding:11px 14px;color:var(--text);font-family:'DM Mono',monospace;font-size:14px;outline:none;transition:border-color 0.2s}
+    input:focus,select:focus{border-color:var(--accent)}
+    input::placeholder{color:var(--muted)}
+    select option{background:var(--surface)}
+    .btn{width:100%;background:var(--accent);color:#07070d;border:none;border-radius:8px;padding:13px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:opacity 0.2s,transform 0.1s;margin-top:0.5rem}
+    .btn:hover{opacity:0.87;transform:translateY(-1px)}
+    .btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+    .error{background:rgba(255,107,107,0.1);border:0.5px solid rgba(255,107,107,0.3);color:var(--error);font-family:'DM Mono',monospace;font-size:13px;padding:10px 14px;border-radius:8px;margin-bottom:1rem;display:none}
+    .success{background:rgba(0,229,160,0.1);border:0.5px solid rgba(0,229,160,0.3);color:var(--accent);font-family:'DM Mono',monospace;font-size:13px;padding:10px 14px;border-radius:8px;margin-bottom:1rem;display:none}
+    .link-row{text-align:center;font-size:13px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:1.25rem}
+    .link-row a{color:var(--accent);text-decoration:none;font-weight:500}
+    .brand-only{display:none}
+    .user-only{display:block}
+  </style>
+</head>
+<body>
+<div class="card">
+  <a href="../index.html" class="logo">
+    <div class="logo-box">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+        <rect x="2" y="2" width="12" height="12" rx="2" stroke="#07070d" stroke-width="1.5"/>
+        <path d="M5 8h6M8 5v6" stroke="#07070d" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    DataVault
+  </a>
+  <h1>Create your Vault</h1>
+  <p class="subtitle">Start earning from your data in 2 minutes</p>
+
+  <div class="tabs">
+    <button class="tab active" onclick="setType('user', this)">👤 I'm a User</button>
+    <button class="tab" onclick="setType('brand', this)">🏢 I'm a Brand</button>
+  </div>
+
+  <div class="error" id="error-msg"></div>
+  <div class="success" id="success-msg"></div>
+
+  <div class="field">
+    <label>FULL NAME</label>
+    <input type="text" id="name" placeholder="Arjun Kumar"/>
+  </div>
+  <div class="field">
+    <label>EMAIL</label>
+    <input type="email" id="email" placeholder="arjun@example.com"/>
+  </div>
+  <div class="field">
+    <label>PASSWORD</label>
+    <input type="password" id="password" placeholder="Min 8 characters"/>
+  </div>
+
+  <!-- User fields -->
+  <div class="row user-only" id="user-fields">
+    <div class="field">
+      <label>CITY</label>
+      <select id="city">
+        <option value="">Select city</option>
+        <option value="Bengaluru">Bengaluru</option>
+        <option value="Mumbai">Mumbai</option>
+        <option value="Delhi">Delhi</option>
+        <option value="Chennai">Chennai</option>
+        <option value="Hyderabad">Hyderabad</option>
+        <option value="Pune">Pune</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>AGE</label>
+      <input type="number" id="age" placeholder="22" min="18" max="80"/>
+    </div>
+  </div>
+
+  <!-- Brand fields -->
+  <div class="field brand-only" id="brand-fields">
+    <label>INDUSTRY</label>
+    <select id="industry">
+      <option value="">Select industry</option>
+      <option value="Sports & Fitness">Sports & Fitness</option>
+      <option value="Food & Beverage">Food & Beverage</option>
+      <option value="Fashion & Apparel">Fashion & Apparel</option>
+      <option value="Technology">Technology</option>
+      <option value="Healthcare">Healthcare</option>
+      <option value="Retail">Retail</option>
+      <option value="Other">Other</option>
+    </select>
+  </div>
+
+  <button class="btn" id="reg-btn" onclick="doRegister()">Create Vault →</button>
+
+  <div class="link-row">
+    Already have an account? <a href="login.html">Login</a>
+  </div>
+</div>
+
+<script>
+  let accountType = 'user';
+
+  function setType(type, el) {
+    accountType = type;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('.user-only').forEach(e => e.style.display = type === 'user' ? 'grid' : 'none');
+    document.querySelectorAll('.brand-only').forEach(e => e.style.display = type === 'brand' ? 'block' : 'none');
+    document.querySelector('h1').textContent = type === 'user' ? 'Create your Vault' : 'Register your Brand';
+    document.querySelector('.subtitle').textContent = type === 'user' ? 'Start earning from your data in 2 minutes' : 'Access consented, anonymised user insights';
+  }
+
+  async function doRegister() {
+    const btn = document.getElementById('reg-btn');
+    const errEl = document.getElementById('error-msg');
+    const okEl = document.getElementById('success-msg');
+    errEl.style.display = 'none';
+    okEl.style.display = 'none';
+
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (!name || !email || !password) {
+      errEl.textContent = 'Please fill all required fields.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Creating vault...';
+
+    let body = { name, email, password };
+    if (accountType === 'user') {
+      body.city = document.getElementById('city').value;
+      body.age = parseInt(document.getElementById('age').value) || null;
+    } else {
+      body.industry = document.getElementById('industry').value;
+    }
+
+    try {
+      const res = await fetch(`http://localhost:8000/auth/register/${accountType}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        errEl.textContent = data.detail || 'Registration failed.';
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Create Vault →';
+        return;
+      }
+      okEl.textContent = `Vault created! Redirecting to login...`;
+      okEl.style.display = 'block';
+      setTimeout(() => window.location.href = 'login.html', 1200);
+    } catch {
+      errEl.textContent = 'Cannot connect to server. Is the backend running?';
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Create Vault →';
+    }
+  }
+</script>
+</body>
+</html>
