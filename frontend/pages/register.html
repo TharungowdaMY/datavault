@@ -156,7 +156,7 @@
     }
 
     try {
-      const res = await fetch(`http://localhost:8000/auth/register/${accountType}`, {
+      const res = await fetch(`https://datavault-s9lc.onrender.com/auth/register/${accountType}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
