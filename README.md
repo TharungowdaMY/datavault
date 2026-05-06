@@ -373,7 +373,7 @@ Designed with:
 Once backend is running, visit:
 
 ```text
-http://localhost:8000/docs
+https://datavault-s9lc.onrender.com/docs
 ```
 
 Interactive Swagger documentation available for all endpoints.

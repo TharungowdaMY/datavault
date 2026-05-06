@@ -100,7 +100,7 @@
     btn.textContent = 'Logging in...';
 
     try {
-      const res = await fetch(`https://datavault-api.onrender.com/auth/login/${accountType}`, {
+      const res = await fetch(`https://datavault-s9lc.onrender.com/auth/login/${accountType}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
