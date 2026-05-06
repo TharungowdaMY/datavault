@@ -1,7 +1,7 @@
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
-from fastapi import HTTPException, status
+from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.core.config import settings
 
@@ -9,7 +9,6 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds
 bearer_scheme = HTTPBearer()
 
 def hash_password(password: str) -> str:
-    # Truncate to 72 bytes to avoid bcrypt limitation
     password = password[:72]
     return pwd_context.hash(password)
 
