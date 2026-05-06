@@ -15,11 +15,15 @@ def start_scheduler():
             ).all()
             for r in expired:
                 r.status = "expired"
-                print(f"[Kill Switch] Request {r.id} access revoked.")
             db.commit()
+        except Exception as e:
+            print(f"Kill switch error: {e}")
         finally:
             db.close()
 
-    scheduler.add_job(kill_switch, "interval", minutes=1, id="kill_switch")
-    scheduler.start()
-    print("[Scheduler] Kill Switch scheduler started.")
+    try:
+        scheduler.add_job(kill_switch, "interval", minutes=1, id="kill_switch")
+        scheduler.start()
+        print("[Scheduler] Kill Switch started.")
+    except Exception as e:
+        print(f"[Scheduler] Failed to start: {e}")
